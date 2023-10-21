@@ -1,95 +1,70 @@
 import express from "express";
+import mongoose from "mongoose";
+import doctordata from "./src/models/Doctor.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 const PORT = 5000;
 
-const doctors = [];
 
-app.get("/doctor" , (req,res)=>{
+
+const mongoconnect = async ()=>{
+    const connextion = await mongoose.connect(process.env.MONGO_URI);
+    if(connextion){
+        console.log("MpngoDB connect Succesfullly")
+    }
+}
+
+mongoconnect()
+
+
+
+app.get("/doctor" , async(req,res)=>{
+
+    const doc = await doctordata.find();
     res.json({
         success : "true",
-        doctor : doctors ,
+        doctor : doc,
         message : "Succesfully Fetch Data."
     })
 })
 
-app.post('/doctors' , (req,res)=>{
+app.post('/doctors' , async (req,res)=>{
     const {name,age,number,degree} = req.body;
 
-    if(!name){
-        return res.json(
-            {
-                message : "name is required",
-                cause : "error"
-            }
-        )
-      }
-      if(!age){
-        return res.json(
-            {
-                message : "age is required",
-                cause : "error"
-            }
-        )
-      }
-      if(!number){
-        return res.json(
-            {
-                message : "number is required",
-                cause : "error"
-            }
-        )
-      }
-      if(!degree){
-        return res.json(
-            {
-                message : "degree is required",
-                cause : "warranty"
-            }
-        )
-      }
+    if (!name || !age || !number || !degree) {
+        return res.json({
+            success: false,
+            message: "All fields are required",
+        });
+    }
      
-    const id = Math.floor(Math.random()*100)+1;
-
-    const obj = {
+    const newDoctor = new doctordata ({
         name,
         age,
         number,
-        degree,
-        id
-    }
-    doctors.push(obj);
+        degree
+    })
+
+    const savedDoctor = await newDoctor.save();
 
     res.json({
         success : "true",
-        doctor : doctors ,
+        doctor : savedDoctor,
         message : "Succesfully Fetch Data."
     })
 })
 
-app.get("/specificdoctor" , (req,res)=>{
-    const {id} = req.query;
+app.get("/specificdoctor" , async(req,res)=>{
+    const {name} = req.query;
 
-  let doct = null;
-  
-  doctors.forEach((docto)=>{
-    if(docto.id==id){
-        doct=docto;
-    }
-  })
-
-  if(doct==null){
-    return res.json(
-        {
-            message : "deatail not found",
-        }
-    )
-  }
+  const Doct = await doctordata.findOne({name:name});
 
   res.json({
     success : "true",
-    doctor : doct ,
+    doctor : Doct,
     message : "Succesfully Fetch Data."
   })
 
