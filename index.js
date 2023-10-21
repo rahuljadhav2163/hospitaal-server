@@ -10,9 +10,9 @@ const PORT = 5000;
 
 
 
-const mongoconnect = async ()=>{
+const mongoconnect = async () => {
     const connextion = await mongoose.connect(process.env.MONGO_URI);
-    if(connextion){
+    if (connextion) {
         console.log("MongoDB connect Succesfullly")
     }
 }
@@ -21,18 +21,18 @@ mongoconnect()
 
 
 
-app.get("/doctor" , async(req,res)=>{
+app.get("/doctor", async (req, res) => {
 
     const doc = await doctordata.find();
     res.json({
-        success : "true",
-        doctor : doc,
-        message : "Succesfully Fetch Data."
+        success: "true",
+        doctor: doc,
+        message: "Succesfully Fetch Data."
     })
 })
 
-app.post('/doctors' , async (req,res)=>{
-    const {name,age,number,degree} = req.body;
+app.post('/doctors', async (req, res) => {
+    const { name, age, number, degree } = req.body;
 
     if (!name || !age || !number || !degree) {
         return res.json({
@@ -40,8 +40,8 @@ app.post('/doctors' , async (req,res)=>{
             message: "All fields are required",
         });
     }
-     
-    const newDoctor = new doctordata ({
+
+    const newDoctor = new doctordata({
         name,
         age,
         number,
@@ -51,67 +51,96 @@ app.post('/doctors' , async (req,res)=>{
     const savedDoctor = await newDoctor.save();
 
     res.json({
-        success : "true",
-        doctor : savedDoctor,
-        message : "Succesfully Fetch Data."
+        success: "true",
+        doctor: savedDoctor,
+        message: "Succesfully Fetch Data."
     })
 })
 
-app.get("/specificdoctor" , async(req,res)=>{
-    const {name} = req.query;
+app.get("/specificdoctor", async (req, res) => {
+    const { name } = req.query;
 
-  const Doct = await doctordata.findOne({name:name});
+    const Doct = await doctordata.findOne({ name: name });
 
-  res.json({
-    success : "true",
-    doctor : Doct,
-    message : "Succesfully Fetch Data."
-  })
-
-})
-
-app.delete('/deletedoc/:id', async (req,res)=>{
-      const {id}= req.params;
-
-      await doctordata.deleteOne({_id : id})
-
-      res.json({
-        success : "true",
-        doctor : {},
-        message : "Succesfully delete Data."
-      })
+    res.json({
+        success: "true",
+        doctor: Doct,
+        message: "Succesfully Fetch Data."
+    })
 
 })
 
-app.put('/updatedoc/:id', async (req,res)=>{
-    const {id} = req.params;
-    const {name,age,number,degree} = req.body;
-   
+app.delete('/deletedoc/:id', async (req, res) => {
+    const { id } = req.params;
+
+    await doctordata.deleteOne({ _id: id })
+
+    res.json({
+        success: "true",
+        doctor: {},
+        message: "Succesfully delete Data."
+    })
+
+})
+
+app.put('/updatedoc/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, age, number, degree } = req.body;
+
     await doctordata.updateOne({
-        _id : id
+        _id: id
     },
-    {
-        $set : {
-            name,age,number,degree
+        {
+            $set: {
+                name, age, number, degree
+            }
         }
-    }
     )
     if (!name || !age || !number || !degree) {
         return res.json({
-          success: false,
-          message: "All fields are required",
+            success: false,
+            message: "All fields are required",
         });
-      }
+    }
 
-       const updatedDoc = await doctordata.findOne({_id : id})
-       res.json({
-        success : "true",
-        doctor : updatedDoc,
-        message : "Succesfully Fetch Data."
-      })
+    const updatedDoc = await doctordata.findOne({ _id: id })
+    res.json({
+        success: "true",
+        doctor: updatedDoc,
+        message: "Succesfully Fetch Data."
+    })
 
 })
 
-app.listen(PORT , ()=>{
+app.patch('/editdoc/:id' , async(req,res)=>{
+    const { id } = req.params;
+    const { name, age, number, degree } = req.body;
+
+    const docone = await  doctordata.findOne({ _id: id })
+
+    if(name){
+        docone.name=name
+    }
+    if(age){
+        docone.age=age
+    }
+    if(number){
+        docone.number=number
+    }
+    if(degree){
+        docone.degree=degree
+    }
+
+    const editDoc = await docone.save()
+
+    res.json({
+        success: "true",
+        doctor: editDoc,
+        message: "Succesfully edit Data."
+    })
+})
+
+
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 })
